@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #7367f0);
+            background-size: 300% 300%;
+            animation: gradientBG 15s ease infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Dot pattern overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Animated background shapes */
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-shapes div {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            animation: float 20s infinite;
+        }
+
+        .bg-shapes div:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-shapes div:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 70%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .bg-shapes div:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .wrapper {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            max-width: 90%;
+            width: 400px;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .wrapper::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            background: linear-gradient(45deg, #ff6b6b33, #4ecdc433, #45b7d133);
+            border-radius: 24px;
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .wrapper:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+        }
+
+        .wrapper:hover::before {
+            opacity: 1;
+        }
+
+        .wrapper h1 {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 25px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: 1px;
+        }
+
+        .wrapper input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .wrapper input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .wrapper button {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .wrapper button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        #qr-code {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        #qr-code img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #download-btn {
+            margin-top: 20px;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1) !important;
+            color: white !important;
+        }
+
+        #download-btn:hover {
+            background: linear-gradient(45deg, #45b7d1, #4ecdc4) !important;
+        }
+
+        /* Loading animation */
+        .loading {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Media Query for smartphones */
+        @media screen and (max-width: 480px) {
+            .wrapper {
+                padding: 25px;
+                margin: 0 15px;
+            }
+
+            .wrapper h1 {
+                font-size: 24px;
+            }
+
+            .wrapper input,
+            .wrapper button {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h1> ALAM QR Code Generator</h1>
+        <input type="text" id="url-input" placeholder="Enter URL or text">
+        <button onclick="generateQR()">Generate QR Code</button>
+        <div class="loading" id="loading"></div>
+        <div id="qr-code"></div>
+        <button id="download-btn" onclick="downloadQR()" style="display: none;">
+            Download KAR LO BHAI QR Code
+        </button>
+    </div>
+
+    <!-- Include QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        function generateQR() {
+            const urlInput = document.getElementById('url-input');
+            const qrContainer = document.getElementById('qr-code');
+            const downloadBtn = document.getElementById('download-btn');
+            const loading = document.getElementById('loading');
+            
+            // Clear previous QR code
+            qrContainer.innerHTML = '';
+            downloadBtn.style.display = 'none';
+
+            if (urlInput.value.trim() === '') {
+                alert('Please enter a URL or text');
+                return;
+            }
+
+            // Show loading animation
+            loading.style.display = 'block';
+            qrContainer.style.display = 'none';
+
+            // Generate QR code with slight delay to show loading
+            setTimeout(() => {
+                // Generate QR code
+                new QRCode(qrContainer, {
+                    text: urlInput.value,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // Hide loading and show QR code
+                loading.style.display = 'none';
+                qrContainer.style.display = 'block';
+                
+                // Show download button
+                setTimeout(() => {
+                    downloadBtn.style.display = 'block';
+                }, 100);
+            }, 800);
+        }
+
+        function downloadQR() {
+            const qrImage = document.querySelector('#qr-code img');
+            if (qrImage) {
+                const link = document.createElement('a');
+                link.href = qrImage.src;
+                link.download = 'qrcode.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    </script>
+</body>
+</html>
